@@ -34,24 +34,34 @@ double number() {
     if (s.size() - pos >= 4 && s.compare(pos, 4, "sqrt") == 0) {
         pos += 4;
         Spaceskip();
-        if (pos < s.size() && s[pos] == '(') {
+        if (pos >= s.size() || s[pos] != '(') 
+            throw runtime_error("Ошибка! Допишите нужные скобки!\n");
             pos++;
             double v = addition();
-            if (pos < s.size() && s[pos] == ')') {
-                pos++;
-                return sqrt(v);
-            }
-        }
+            if (pos >= s.size() || s[pos] != ')')
+                throw runtime_error("Ошибка! Допишите нужные скобки!\n");
+            pos++;
+            return sqrt(v);
     }
+
+    if (pos >= s.size()) {
+        throw runtime_error("Ошибка: выражение оборвалось, не хватает числа!\n");
+    }
+    
+    
+
     // Проверка на наличие скобок
     if (pos < s.size() && s[pos] == '(') {
         pos++;
         double v = addition();
-        if (pos < s.size() && s[pos] == ')') {
+        if (pos >= s.size() || s[pos] != ')')
+            throw runtime_error("Ошибка! Незакрытая скобка! Попробуйте снова!\n");
             pos++;
             return v;
-        }
     }
+    if (!isdigit(s[pos]))
+        throw runtime_error(string("Ошибка: неизвестный символ '") + s[pos] + "'! Ожидалось число.\n");
+
     // Проверка числа
     double whole = 0;
     while (pos < s.size() && isdigit(s[pos])) {
@@ -81,7 +91,15 @@ double multiplication() {
         }
         char op = s[pos++];
         double r = degree();
-        v = (op == '*') ? v * r : v / r;
+        if (op == '*') {
+            v = v * r;
+        }
+        else if (op == '/') {
+            if (r == 0) {
+                throw runtime_error("Ошибка! Нельзя делить на ноль. Попробуйте снова!\n");
+            }
+            v = v / r;
+        }
     }
     return v;
 }
@@ -100,6 +118,7 @@ double addition() {
 }
 
 double degree() {
+
     double v = number();
     Spaceskip();
     if (pos < s.size() && s[pos] == '^') {
@@ -107,7 +126,7 @@ double degree() {
         double r = degree();
         return pow(v, r);
     }
-    return v;
+    return  v;
 }
 int main(void) {
     setlocale(LC_ALL, "Russian");
@@ -128,7 +147,17 @@ int main(void) {
         }
 
         pos = 0;
-        cout << "Результат: " << fixed << setprecision(3) << addition() << "\n";
+
+        try {
+            double result = addition();
+            if (pos < s.size())
+                throw runtime_error("Неизвестное выражение! Попробуйте снова!\n");
+            cout << "Результат: " << fixed << setprecision(3) << result << "\n";
+        }
+        catch (runtime_error const &r) {
+            cout << r.what();
+        }
+
     }
     return 0;
 }
